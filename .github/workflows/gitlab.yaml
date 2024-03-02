@@ -5,23 +5,24 @@ on:
   push:
     branches:
       - main
+
+
 jobs:
-  build:
+  copy-files:
     runs-on: ubuntu-latest
     environment: gitlab
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-    - name: Set up Git
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITLAB_KEY }}
-      run: |
-        git config user.name "GitHub Action"
-        git config user.email "anward@stud.ntnu.no"
-        git remote add gitlab "http://oauth2:${GITHUB_TOKEN}@git.gvk.idi.ntnu.no:course/prog2005/prog2005-2024-workspace/anwar/assignment1cloud.git"
-#         git remote set-url gitlab "http://oauth2:${GITHUB_TOKEN}@git.gvk.idi.ntnu.no:course/prog2005/prog2005-2024-workspace/anwar/assignment1cloud.git"
-          git push --set-upstream gitlab -all
-          git push --set-upstream gitlab -tags
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
+      - name: Copy files
+        env:
+          GITLAB_KEY: ${{ secrets.GITLAB_KEY }}
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "anward@stud.ntnu.no"
+          git remote set-url gitlab "https://oauth2:${GITLAB_KEY}@git.gvk.idi.ntnu.no/course/prog2005/prog2005-2024-workspace/anwar/assignment1cloud.git"
+          git push --set-upstream gitlab --all
+          git push --set-upstream gitlab --tags
