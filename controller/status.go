@@ -5,17 +5,6 @@ import (
 	"net/http"
 )
 
-/*
-type Status struct {
-	Qutendexapi  int    `json:"gutendexapi"`
-	Languageapi  int    `json:"languageapi"`
-	Countriesapi int    `json:"countriesapi"`
-	Version      string `json:"version"`
-	Uptime       string `json:"uptime"`
-}
-
-*/
-
 func StatusHandlerMethod(w http.ResponseWriter, r *http.Request) {
 
 	// avoiding index out of bounds

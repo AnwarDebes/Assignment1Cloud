@@ -8,16 +8,6 @@ import (
 	"strings"
 )
 
-/*
-type BookCount struct {
-	Language string  `json:"language"`
-	Count    int     `json:"books"`
-	Authors  int     `json:"authors"`
-	Fraction float64 `json:"fraction"`
-}
-
-*/
-
 // BookCounterHandlerMethod handles the /librarystats/v1/bookcount/ endpoint.
 // It routes the request based on the method and query parameters.
 func BookCounterHandlerMethod(w http.ResponseWriter, r *http.Request) {
@@ -109,48 +99,6 @@ func JsonEncodeResponse(w http.ResponseWriter, responseObject interface{}) {
 		log.Println("Error encoding JSON:", err)
 	}
 }
-
-/*
-// jsonDecodeRequest decodes the JSON payload from an HTTP request and returns it as a slice of maps.
-
-	func jsonDecodeRequest(r *http.Response) []map[string]interface{} {
-		var response map[string]interface{}
-		fmt.Println(r.Body)
-		decoder := json.NewDecoder(r.Body)
-		if err := decoder.Decode(&response); err != nil {
-			log.Printf("Error decoding JSON: %v", err)
-			return nil // Return nil to indicate decoding failure
-		}
-		fmt.Println(response)
-		// Extract the 'results' field, if present, and convert to a slice of maps
-		if results, found := response["results"].([]interface{}); found {
-			var resultsSlice []map[string]interface{}
-			for _, result := range results {
-				if resultMap, isValid := result.(map[string]interface{}); isValid {
-					resultsSlice = append(resultsSlice, resultMap)
-				}
-			}
-			fmt.Println(resultsSlice)
-			return resultsSlice
-		}
-		log.Println("JSON format unexpected: 'results' field missing or invalid")
-		return nil // Return nil to indicate unexpected JSON format
-	}
-
-	func getResultFromAPI(w http.ResponseWriter, lang string) []map[string]interface{} {
-		req, err := http.NewRequest(http.MethodGet, model.GUTENDEX+lang, nil)
-		if err != nil {
-			http.Error(w, "Error occurred during creating the new request to the external API", http.StatusBadRequest)
-		}
-
-		res, err := http.DefaultClient.Do(req)
-		if err != nil {
-			http.Error(w, "Error occurred during receiving the response from the external API", http.StatusBadRequest)
-		}
-		fmt.Println("response is" + strconv.Itoa(res.StatusCode))
-		return jsonDecodeRequest(res)
-	}
-*/
 
 func GetResultFromAPI(w http.ResponseWriter, lang string) []map[string]interface{} {
 	var allResults []map[string]interface{}
