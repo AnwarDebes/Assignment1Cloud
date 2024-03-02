@@ -24,5 +24,5 @@ jobs:
           git config user.name "GitHub Action"
           git config user.email "anward@stud.ntnu.no"
           git remote add gitlab "https://oauth2:${GITLAB_KEY}@git.gvk.idi.ntnu.no/course/prog2005/prog2005-2024-workspace/anwar/assignment1cloud.git"
-          git push --set-upstream gitlab --all
-          git push --set-upstream gitlab --tags
+          git push --force --set-upstream gitlab --all
+          git push --force --set-upstream gitlab --tags
