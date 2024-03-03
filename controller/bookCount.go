@@ -8,8 +8,11 @@ import (
 	"strings"
 )
 
-// BookCounterHandlerMethod handles the /librarystats/v1/bookcount/ endpoint.
-// It routes the request based on the method and query parameters.
+// BookCounterHandlerMethod is the entry point for handling requests to the /librarystats/v1/bookcount/ endpoint.
+// It determines the appropriate action based on the HTTP method and query parameters provided in the request.
+// If a 'language' query parameter is present, it will attempt to process the request using getBookCountFromAPI for GET requests,
+// otherwise, it will respond with an error for unsupported HTTP methods. If no 'language' parameter is provided, it directs
+// the user to the main page with instructions on how to use the endpoint.
 func BookCounterHandlerMethod(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Get("language") != "" {
 		if r.Method == http.MethodGet {
@@ -22,12 +25,14 @@ func BookCounterHandlerMethod(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-/*
-// getBookCountFromAPI handles GET requests to /librarystats/v1/bookcount/ endpoint
-// by fetching book counts based on the specified language(s).
+// getBookCountFromAPI handles the retrieval of book counts by language from an external API.
+// It extracts the 'language' query parameter, validates it, and then queries the API for each language specified.
+// The results are aggregated into a slice of model.BookCount, which is then encoded as a JSON response.
 func getBookCountFromAPI(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("language")
 	languages := strings.Split(query, ",")
+
+	var bookCounts []model.BookCount // Holds the aggregated results
 
 	for _, language := range languages {
 		if len(language) == 0 {
@@ -41,55 +46,24 @@ func getBookCountFromAPI(w http.ResponseWriter, r *http.Request) {
 
 	for _, lang := range languages {
 		results := GetResultFromAPI(w, lang)
+		if results == nil { // Handle API errors gracefully
+			continue
+		}
 		authorsCount, bookCount := GetResultOfCount(results)
-		book := model.BookCount{
+		bookCounts = append(bookCounts, model.BookCount{
 			Language: lang,
 			Count:    bookCount,
 			Authors:  authorsCount,
 			Fraction: float64(bookCount) / float64(model.TOTAL_BOOKS_IN_Library),
-		}
-		JsonEncodeResponse(w, book)
-	}
-}
-*/
-
-func getBookCountFromAPI(w http.ResponseWriter, r *http.Request) {
-	query := r.URL.Query().Get("language")
-	languages := strings.Split(query, ",")
-
-	var bookCounts []model.BookCount // Step 1: Declare a slice to hold the book counts
-
-	for _, language := range languages {
-		if len(language) == 0 {
-			http.Error(w, "No language code provided. Please provide a language code of two letters.", http.StatusBadRequest)
-			return
-		} else if len(language) != 2 {
-			http.Error(w, "Invalid language code: '"+language+"'. Please provide a language code of two letters.", http.StatusBadRequest)
-			return
-		}
+		})
 	}
 
-	for _, lang := range languages {
-		results := GetResultFromAPI(w, lang)
-		if results == nil { // Check for nil results to handle errors gracefully
-			continue
-		}
-		authorsCount, bookCount := GetResultOfCount(results)
-		book := model.BookCount{
-			Language: lang,
-			Count:    bookCount, // Ensure this matches the field name in your model
-			Authors:  authorsCount,
-			Fraction: float64(bookCount) / float64(model.TOTAL_BOOKS_IN_Library),
-		}
-
-		bookCounts = append(bookCounts, book) // Step 2: Append the book count object to the slice
-	}
-
-	// Step 3: Encode the entire slice as JSON and write it to the response
-	JsonEncodeResponse(w, bookCounts)
+	JsonEncodeResponse(w, bookCounts) // Encode and send the response
 }
 
-// getResultOfCount parses the API response to count the number of authors and books.
+// GetResultOfCount processes the raw API response to count unique authors and books.
+// It iterates over each book in the response, counts the number of unique authors (ignoring duplicates and 'Unknown' authors),
+// and increments the book count for each valid entry. The result is the total number of unique authors and the total number of books.
 func GetResultOfCount(res []map[string]interface{}) (int, int) {
 	authorsCount := make(map[string]interface{})
 	bookCount := 0
@@ -98,10 +72,8 @@ func GetResultOfCount(res []map[string]interface{}) (int, int) {
 		if authors, ok := book["authors"].([]interface{}); ok && len(authors) > 0 {
 			for _, newAuthor := range authors {
 				if author, ok := newAuthor.(map[string]interface{}); ok {
-					if authorName, nameOk := author["name"].(string); nameOk && authorName != "Unknown" { //TODO handle unknown author
-						// Trim whitespaces and convert to lowercase
+					if authorName, nameOk := author["name"].(string); nameOk && authorName != "Unknown" {
 						authorName = strings.TrimSpace(strings.ToLower(authorName))
-						// Add to unique authors map
 						if _, exist := authorsCount[authorName]; !exist {
 							authorsCount[authorName] = nil
 						}
@@ -115,7 +87,8 @@ func GetResultOfCount(res []map[string]interface{}) (int, int) {
 	return len(authorsCount), bookCount
 }
 
-// mainPageForBookCounter provides information on how to use the /librarystats/v1/bookcount/ endpoint.
+// mainPageForBookCounter provides a default response for the /librarystats/v1/bookcount/ endpoint when no language parameter is provided.
+// It gives a brief description of the service and instructions on how to use the endpoint to get book and author counts by language.
 func mainPageForBookCounter(w http.ResponseWriter) {
 	output := "Here is the book counter main page where you can count the number of the books of a certain language as well as the author." +
 		"Here is an explanation in how to use the service:\n" + "First the" + model.Book_Count + " take you to book counter main page." +
@@ -124,11 +97,12 @@ func mainPageForBookCounter(w http.ResponseWriter) {
 		" typing a comma and the next two letter language code such like that" + model.Book_Language_Dutch_French + " the URL here provide you a " +
 		" the count of books in both dutch and french along with authors"
 
-	JsonEncodeResponse(w, output)
-
+	JsonEncodeResponse(w, output) // Encode and send the instructional response
 }
 
-// jsonEncodeResponse encodes the given response object as JSON and writes it to the response writer.
+// JsonEncodeResponse is a utility function that takes any Go data structure and encodes it into JSON format,
+// writing the resulting JSON to the provided http.ResponseWriter. It sets the appropriate content type and handles any errors in encoding,
+// sending a server error response if encoding fails.
 func JsonEncodeResponse(w http.ResponseWriter, responseObject interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)
@@ -138,13 +112,14 @@ func JsonEncodeResponse(w http.ResponseWriter, responseObject interface{}) {
 	}
 }
 
+// GetResultFromAPI queries an external API for book data based on the specified language code.
+// It constructs and sends HTTP GET requests to the API, parsing and aggregating the paginated JSON responses until all pages have been processed.
+// The function returns a slice of map[string]interface{} representing the aggregated results, or nil if an error occurs during API communication.
 func GetResultFromAPI(w http.ResponseWriter, lang string) []map[string]interface{} {
 	var allResults []map[string]interface{}
 
-	// Start with the initial URL
-	nextURL := model.GUTENDEX + lang
+	nextURL := model.GUTENDEX + lang // Initial URL to start fetching from
 
-	// Keep looping as long as there's a next URL to go to
 	for nextURL != "" {
 		req, err := http.NewRequest(http.MethodGet, nextURL, nil)
 		if err != nil {
@@ -157,14 +132,10 @@ func GetResultFromAPI(w http.ResponseWriter, lang string) []map[string]interface
 			http.Error(w, "Error occurred during receiving the response from the external API", http.StatusBadRequest)
 			return nil
 		}
-		// Ensure response body is closed
 
-		// Decode the JSON response
-		pageResults, nextPage := model.JsonDecodeRequest(res)
-		allResults = append(allResults, pageResults...)
-
-		// Update the nextURL with the nextPage URL
-		nextURL = nextPage
+		pageResults, nextPage := model.JsonDecodeRequest(res) // Process the API response
+		allResults = append(allResults, pageResults...)       // Aggregate results
+		nextURL = nextPage                                    // Prepare for the next iteration
 		res.Body.Close()
 	}
 	return allResults
