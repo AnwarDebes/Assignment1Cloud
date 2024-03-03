@@ -28,7 +28,7 @@ Access to an internet connection for external API calls
 ### Installation
 1. Clone the repository:
 
-   git clone https://github.com/AnwarDebes/Assignment1Cloud.git
+   git clone https://git.gvk.idi.ntnu.no/course/prog2005/prog2005-2024-workspace/anwar/assignment1cloud.git
 
 2. Navigate to the project directory:
 
@@ -178,8 +178,7 @@ Assignment1Cloud includes the following features:
 3. API status checks for dependencies.
 4. Multi-language support for queries.
 
-## Contributing
-We welcome contributions from the community. If you'd like to contribute, please fork the repository and create a pull request with your changes. For major changes, please open an issue first to discuss what you would like to change.
+
 ## Credits
 This project was developed by Anwar Debes as part of an academic assignment for the Cloud Computing course at NTNU Gjøvik.
 
