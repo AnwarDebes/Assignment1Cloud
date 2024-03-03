@@ -54,6 +54,7 @@ func ReaderCountHandlerMethod(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+/*
 func getReadershipFromAPI(w http.ResponseWriter, languageCode string, limit int) {
 	res := getResponseFromAPI(w, model.LANGUAGE_TO_COUNTRY+"language2countries/"+languageCode)
 
@@ -79,6 +80,41 @@ func getReadershipFromAPI(w http.ResponseWriter, languageCode string, limit int)
 		}
 		JsonEncodeResponse(w, readershipData)
 	}
+}
+*/
+
+func getReadershipFromAPI(w http.ResponseWriter, languageCode string, limit int) {
+	res := getResponseFromAPI(w, model.LANGUAGE_TO_COUNTRY+"language2countries/"+languageCode)
+
+	// If limit is set and less than the length of res, reslice res to limit's length
+	if limit > 0 && len(res) > limit {
+		res = res[:limit]
+	}
+
+	counts := GetResultFromAPI(w, languageCode)
+	books, authors := GetResultOfCount(counts)
+
+	// Initialize a slice to hold all readershipData objects
+	var readershipDataList []model.Readership
+
+	for _, country := range res {
+		nameOfCountry, _ := country["Official_Name"].(string)
+		isoOfCountry, _ := country["ISO3166_1_Alpha_2"].(string)
+		populationResponse := getResponseFromAPI(w, model.POPULATION_API+"v3.1/name/"+nameOfCountry)
+		population, _ := populationResponse[0]["population"].(float64)
+		readershipData := model.Readership{
+			Country:    nameOfCountry,
+			IsoCode:    isoOfCountry,
+			Books:      books,
+			Authors:    authors,
+			Readership: population,
+		}
+		// Append the data to the slice
+		readershipDataList = append(readershipDataList, readershipData)
+	}
+
+	// Encode the entire slice as a JSON response
+	JsonEncodeResponse(w, readershipDataList)
 }
 
 func getResponseFromAPI(w http.ResponseWriter, path string) []map[string]interface{} {
