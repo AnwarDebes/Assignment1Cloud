@@ -169,5 +169,3 @@ func GetResultFromAPI(w http.ResponseWriter, lang string) []map[string]interface
 	}
 	return allResults
 }
-
-//TODO make an array for holding the objects of the response
