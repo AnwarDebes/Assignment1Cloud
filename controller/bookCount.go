@@ -22,6 +22,7 @@ func BookCounterHandlerMethod(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+/*
 // getBookCountFromAPI handles GET requests to /librarystats/v1/bookcount/ endpoint
 // by fetching book counts based on the specified language(s).
 func getBookCountFromAPI(w http.ResponseWriter, r *http.Request) {
@@ -49,6 +50,43 @@ func getBookCountFromAPI(w http.ResponseWriter, r *http.Request) {
 		}
 		JsonEncodeResponse(w, book)
 	}
+}
+*/
+
+func getBookCountFromAPI(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query().Get("language")
+	languages := strings.Split(query, ",")
+
+	var bookCounts []model.BookCount // Step 1: Declare a slice to hold the book counts
+
+	for _, language := range languages {
+		if len(language) == 0 {
+			http.Error(w, "No language code provided. Please provide a language code of two letters.", http.StatusBadRequest)
+			return
+		} else if len(language) != 2 {
+			http.Error(w, "Invalid language code: '"+language+"'. Please provide a language code of two letters.", http.StatusBadRequest)
+			return
+		}
+	}
+
+	for _, lang := range languages {
+		results := GetResultFromAPI(w, lang)
+		if results == nil { // Check for nil results to handle errors gracefully
+			continue
+		}
+		authorsCount, bookCount := GetResultOfCount(results)
+		book := model.BookCount{
+			Language: lang,
+			Count:    bookCount, // Ensure this matches the field name in your model
+			Authors:  authorsCount,
+			Fraction: float64(bookCount) / float64(model.TOTAL_BOOKS_IN_Library),
+		}
+
+		bookCounts = append(bookCounts, book) // Step 2: Append the book count object to the slice
+	}
+
+	// Step 3: Encode the entire slice as JSON and write it to the response
+	JsonEncodeResponse(w, bookCounts)
 }
 
 // getResultOfCount parses the API response to count the number of authors and books.
@@ -131,3 +169,5 @@ func GetResultFromAPI(w http.ResponseWriter, lang string) []map[string]interface
 	}
 	return allResults
 }
+
+//TODO make an array for holding the objects of the response
