@@ -1,6 +1,8 @@
 
 # Assignment1Cloud
 
+▶ See this project in the film *Show Its Work*: https://youtu.be/pefnyZ-oCcM?t=140
+
 ## Table of Contents
 
 - [Introduction](#introduction)
@@ -9,9 +11,7 @@
     - [Installation](#installation)
 - [Usage](#usage)
 - [Features](#features)
-- [Contributing](#contributing)
 - [Credits](#credits)
-- [License](#license)
 
 ## Introduction
 
@@ -28,7 +28,7 @@ Access to an internet connection for external API calls
 ### Installation
 1. Clone the repository:
 
-   git clone https://git.gvk.idi.ntnu.no/course/prog2005/prog2005-2024-workspace/anwar/assignment1cloud.git
+   git clone https://github.com/AnwarDebes/Assignment1Cloud.git
 
 2. Navigate to the project directory:
 
@@ -49,12 +49,12 @@ This section provides a detailed guide on how to use the application, including 
 
 The application provides the following endpoints:
 
-1. `GET /book-count`: Retrieves the number of books in the library by language.
+1. `GET /bookcount`: Retrieves the number of books in the library by language.
 2. `GET /readership`: Retrieves readership statistics including country, ISO code, and total numbers of books and authors.
 3. `GET /status`: Checks the status of the application's dependencies.
 
 
-#### `GET /book-count`
+#### `GET /bookcount`
 
 This endpoint retrieves the number of books in the library by language.
 
@@ -160,7 +160,7 @@ http://localhost:8080/librarystats/v1/status/
 ```
 {
    "gutendexapi": "<http status code for gutendex API>",
-   "languageapi: "<http status code for language2countries API>", 
+   "languageapi": "<http status code for language2countries API>", 
    "countriesapi": "<http status code for restcountries API>",
    "version": "v1",
    "uptime": <time in seconds from the last service restart>
